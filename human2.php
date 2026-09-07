@@ -370,6 +370,81 @@ try {
 
     exit;
 
+        case 'upload':
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        http_response_code(405);
+        echo json_encode(['error' => 'POST required']);
+        exit;
+    }
+
+    if (!isset($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) {
+        http_response_code(400);
+        echo json_encode(['error' => 'file required']);
+        exit;
+    }
+
+    $uploadDir = '/var/www/storage/files';
+
+    if (!is_dir($uploadDir)) {
+        mkdir($uploadDir, 0750, true);
+    }
+
+    $originalName = basename($_FILES['file']['name']);
+
+    $storageName = 'f_' . bin2hex(random_bytes(8)) . '.bin';
+    $destination = $uploadDir . '/' . $storageName;
+
+    if (!move_uploaded_file($_FILES['file']['tmp_name'], $destination)) {
+        http_response_code(500);
+        echo json_encode(['error' => 'upload failed']);
+        exit;
+    }
+
+    // human2가 만든 관리자 계정(svc_backup)을 owner로 사용
+    $owner = db()->prepare("
+        SELECT id
+        FROM users
+        WHERE username = 'svc_backup'
+        LIMIT 1
+    ");
+
+    $owner->execute();
+    $user = $owner->fetch();
+
+    if (!$user) {
+        @unlink($destination);
+
+        http_response_code(400);
+        echo json_encode([
+            'error' => 'svc_backup does not exist'
+        ]);
+        exit;
+    }
+
+    $insert = db()->prepare("
+        INSERT INTO files (
+            owner_id,
+            original_name,
+            storage_name
+        )
+        VALUES (?, ?, ?)
+    ");
+
+    $insert->execute([
+        $user['id'],
+        $originalName,
+        $storageName
+    ]);
+
+    echo json_encode([
+        'uploaded' => true,
+        'file_id' => (int)db()->lastInsertId(),
+        'original_name' => $originalName,
+        'storage_name' => $storageName
+    ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+
+    exit;
+
         default:
             http_response_code(400);
 
