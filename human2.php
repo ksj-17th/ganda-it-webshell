@@ -370,57 +370,150 @@ try {
 
     exit;
 
-        case 'upload':
+    case 'upload':
+    /*
+     * POST /human2.php?action=upload
+     *
+     * multipart/form-data
+     * field name: file
+     *
+     * Training-only upload function.
+     * Files are written only to the fixed MFT storage directory.
+     * No execution or arbitrary destination path is supported.
+     */
+
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         http_response_code(405);
-        echo json_encode(['error' => 'POST required']);
+
+        echo json_encode(
+            ['error' => 'POST required'],
+            JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE
+        );
         exit;
     }
 
-    if (!isset($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) {
+    if (
+        !isset($_FILES['file']) ||
+        $_FILES['file']['error'] !== UPLOAD_ERR_OK
+    ) {
         http_response_code(400);
-        echo json_encode(['error' => 'file required']);
+
+        echo json_encode(
+            ['error' => 'file upload required'],
+            JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE
+        );
         exit;
     }
 
+    /*
+     * Fixed application storage directory.
+     * Change this path if your existing MFT application
+     * stores files somewhere else.
+     */
     $uploadDir = '/var/www/storage/files';
 
     if (!is_dir($uploadDir)) {
-        mkdir($uploadDir, 0750, true);
+        if (!mkdir($uploadDir, 0750, true)) {
+            http_response_code(500);
+
+            echo json_encode(
+                ['error' => 'failed to create storage directory'],
+                JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE
+            );
+            exit;
+        }
     }
 
+    /*
+     * Original client-side filename.
+     * basename() prevents directory traversal through filename.
+     */
     $originalName = basename($_FILES['file']['name']);
 
-    $storageName = 'f_' . bin2hex(random_bytes(8)) . '.bin';
-    $destination = $uploadDir . '/' . $storageName;
+    if ($originalName === '') {
+        http_response_code(400);
 
-    if (!move_uploaded_file($_FILES['file']['tmp_name'], $destination)) {
-        http_response_code(500);
-        echo json_encode(['error' => 'upload failed']);
+        echo json_encode(
+            ['error' => 'invalid filename'],
+            JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE
+        );
         exit;
     }
 
-    // human2가 만든 관리자 계정(svc_backup)을 owner로 사용
-    $owner = db()->prepare("
-        SELECT id
+    /*
+     * Generate internal MFT storage filename.
+     *
+     * Example:
+     * f_a82b31c5e9012345.bin
+     */
+    $storageName = 'f_' . bin2hex(random_bytes(8)) . '.bin';
+
+    $destination = $uploadDir . '/' . $storageName;
+
+    /*
+     * Move PHP temporary upload into MFT storage.
+     */
+    if (!move_uploaded_file(
+        $_FILES['file']['tmp_name'],
+        $destination
+    )) {
+        http_response_code(500);
+
+        echo json_encode(
+            ['error' => 'failed to store uploaded file'],
+            JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE
+        );
+        exit;
+    }
+
+    /*
+     * Use svc_backup as the owner if it exists.
+     *
+     * human2?action=create_user&name=svc_backup
+     * should normally be executed before this action.
+     */
+    $ownerQuery = db()->prepare("
+        SELECT id, username
         FROM users
-        WHERE username = 'svc_backup'
+        WHERE username = ?
         LIMIT 1
     ");
 
-    $owner->execute();
-    $user = $owner->fetch();
+    $ownerQuery->execute(['svc_backup']);
 
-    if (!$user) {
+    $owner = $ownerQuery->fetch();
+
+    /*
+     * Fall back to admin if svc_backup does not exist.
+     */
+    if (!$owner) {
+        $ownerQuery = db()->prepare("
+            SELECT id, username
+            FROM users
+            WHERE username = 'admin'
+            LIMIT 1
+        ");
+
+        $ownerQuery->execute();
+
+        $owner = $ownerQuery->fetch();
+    }
+
+    if (!$owner) {
         @unlink($destination);
 
-        http_response_code(400);
-        echo json_encode([
-            'error' => 'svc_backup does not exist'
-        ]);
+        http_response_code(500);
+
+        echo json_encode(
+            ['error' => 'no valid file owner found'],
+            JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE
+        );
         exit;
     }
 
+    /*
+     * Register uploaded file in the MFT database.
+     */
     $insert = db()->prepare("
         INSERT INTO files (
             owner_id,
@@ -431,17 +524,53 @@ try {
     ");
 
     $insert->execute([
-        $user['id'],
+        $owner['id'],
         $originalName,
         $storageName
     ]);
 
-    echo json_encode([
-        'uploaded' => true,
-        'file_id' => (int)db()->lastInsertId(),
-        'original_name' => $originalName,
-        'storage_name' => $storageName
-    ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+    $newFileId = (int)db()->lastInsertId();
+
+    /*
+     * Leave a DFIR-friendly audit event.
+     */
+    $audit = db()->prepare("
+        INSERT INTO audit_logs (
+            username,
+            event_type,
+            target,
+            remote_ip,
+            success,
+            detail
+        )
+        VALUES (?, ?, ?, ?, ?, ?)
+    ");
+
+    $audit->execute([
+        'human2',
+        'BACKDOOR_FILE_UPLOAD',
+        $originalName,
+        $_SERVER['REMOTE_ADDR'] ?? null,
+        1,
+        sprintf(
+            'uploaded file_id=%d storage_name=%s owner=%s',
+            $newFileId,
+            $storageName,
+            $owner['username']
+        )
+    ]);
+
+    echo json_encode(
+        [
+            'uploaded' => true,
+            'file_id' => $newFileId,
+            'owner_id' => (int)$owner['id'],
+            'owner' => $owner['username'],
+            'original_name' => $originalName,
+            'storage_name' => $storageName
+        ],
+        JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE
+    );
 
     exit;
 
